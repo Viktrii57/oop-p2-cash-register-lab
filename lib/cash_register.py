@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 class CashRegister:
-  def __init__(self, discount=0):
+    def __init__(self, discount=0):
         # Initialize internal variables first
         self._discount = 0
         self.total = 0
         self.items = []
         self.previous_transactions = []
-        
+
         # Use the setter property to validate the initial discount
         self.discount = discount
 
@@ -24,27 +24,44 @@ class CashRegister:
         else:
             print("Not valid discount")
 
-    def add_item(self, item, price, quantity):
-        """Adds price to total, appends item, and logs transaction history."""
+    def add_item(self, item, price, quantity=1):
+        """Adds price to total, appends item(s), and logs transaction history."""
         # Add price * quantity to the total
         self.total += price * quantity
-        
-        # Add the item to the items array
-        self.items.append(item)
-        
+
+        # Add the item to the items list quantity times
+        for _ in range(quantity):
+            self.items.append(item)
+
         # Add transaction tracking dictionary object
         transaction = {
             "item": item,
             "price": price,
-            "quantity": quantity
+            "quantity": quantity,
         }
         self.previous_transactions.append(transaction)
 
     def apply_discount(self):
-        """Applies the discount percentage to the total register price."""
-        # Discount is a percentage off of the total price
-        discount_amount = self.total * (self.discount / 100)
-        self.total -= discount_amount
+        """Applies the discount percentage to the total register price.
+
+        Prints a success message when a discount is applied, otherwise
+        prints that there is no discount to apply.
+        """
+        if self.discount and self.discount > 0:
+            discount_amount = self.total * (self.discount / 100)
+            self.total -= discount_amount
+
+            # Format total without unnecessary .0 when it's a whole number
+            if isinstance(self.total, float) and self.total.is_integer():
+                total_display = int(self.total)
+            elif isinstance(self.total, int):
+                total_display = self.total
+            else:
+                total_display = round(self.total, 2)
+
+            print(f"After the discount, the total comes to ${total_display}.")
+        else:
+            print("There is no discount to apply.")
 
     def void_last_transaction(self):
         """Undoes the last transaction, correcting total, items, and history."""
@@ -53,13 +70,14 @@ class CashRegister:
             print("There is no transaction to void.")
             return
 
-        # Remove the last item from previous_transactions
+        # Remove the last transaction from previous_transactions
         last_tx = self.previous_transactions.pop()
-        
-        # Ensure price reflects correctly by deducting it from the total
+
+        # Deduct the cost from the total
         tx_cost = last_tx["price"] * last_tx["quantity"]
         self.total -= tx_cost
-        
-        # Ensure items reflects correctly by removing the item from the array
-        if last_tx["item"] in self.items:
-            self.items.remove(last_tx["item"])
+
+        # Remove the item from the items list as many times as its quantity
+        for _ in range(last_tx["quantity"]):
+            if last_tx["item"] in self.items:
+                self.items.remove(last_tx["item"])
